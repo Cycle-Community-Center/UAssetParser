@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Security.Cryptography;
 using DragonLib.IO;
 using JetBrains.Annotations;
 using UObject.Generics;
@@ -33,7 +35,7 @@ namespace UObject.Asset
 
         public AssetFile() { }
 
-        public AssetFileOptions Options { get; set; }
+        public AssetFileOptions? Options { get; set; }
 
         public PackageFileSummary Summary { get; set; } = new PackageFileSummary();
         public NameEntry[] Names { get; set; } = new NameEntry[0];
@@ -42,5 +44,15 @@ namespace UObject.Asset
         public PreloadDependencyIndex[] PreloadDependencies { get; set; } = new PreloadDependencyIndex[0];
 
         public Dictionary<string, ISerializableObject> ExportObjects { get; set; } = new Dictionary<string, ISerializableObject>();
+        public bool IsSupported => Exports.All(ObjectSerializer.IsSupported);
+
+
+        public void Serialize()
+        {
+            // Update META and Summary, recalculate values
+            // Serialize serial data
+            // Write data
+            throw new NotImplementedException();
+        }
     }
 }

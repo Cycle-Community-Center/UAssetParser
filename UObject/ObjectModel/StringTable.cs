@@ -10,9 +10,9 @@ namespace UObject.ObjectModel
     [PublicAPI]
     public class StringTable : ISerializableObject
     {
-        public string Name { get; set; } = "None";
+        public string? Name { get; set; }
         public int Reserved { get; set; }
-        public Dictionary<string, string> Data { get; set; } = new Dictionary<string, string>();
+        public Dictionary<string, string?> Data { get; set; } = new Dictionary<string, string?>();
         public UnrealObject ExportData { get; set; } = new UnrealObject();
 
         public void Deserialize(Span<byte> buffer, AssetFile asset, ref int cursor)
@@ -21,11 +21,20 @@ namespace UObject.ObjectModel
             Reserved = SpanHelper.ReadLittleInt(buffer, ref cursor);
             Name = ObjectSerializer.DeserializeString(buffer, ref cursor);
             var count = SpanHelper.ReadLittleInt(buffer, ref cursor);
-            for(int i = 0; i < count; ++i)
-                Data.Add(ObjectSerializer.DeserializeString(buffer, ref cursor),
-                         ObjectSerializer.DeserializeString(buffer, ref cursor));
+            for (var i = 0; i < count; ++i) Data.Add(ObjectSerializer.DeserializeString(buffer, ref cursor) ?? $"{cursor:X}", ObjectSerializer.DeserializeString(buffer, ref cursor));
         }
 
-        public void Serialize(ref Memory<byte> buffer, AssetFile asset, ref int cursor) => throw new NotImplementedException();
+        public void Serialize(ref Memory<byte> buffer, AssetFile asset, ref int cursor)
+        {
+            ExportData.Serialize(ref buffer, asset, ref cursor);
+            SpanHelper.WriteLittleInt(ref buffer, Reserved, ref cursor);
+            ObjectSerializer.SerializeString(ref buffer, Name ?? String.Empty, ref cursor);
+            SpanHelper.WriteLittleInt(ref buffer, Data.Count, ref cursor);
+            foreach (var obj in Data)
+            {
+                ObjectSerializer.SerializeString(ref buffer, obj.Key, ref cursor);
+                ObjectSerializer.SerializeString(ref buffer, obj.Value ?? String.Empty, ref cursor);
+            }
+        }
     }
 }
